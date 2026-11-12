@@ -8,6 +8,13 @@
       "when": 1794480971290,
       "tag": "0000_pins_core",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794481041710,
+      "tag": "0001_pins_updated_at",
+      "breakpoints": true
     }
   ]
 }

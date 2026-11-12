@@ -60,6 +60,9 @@ export const bufferOverview = createServerFn({ method: "POST" })
 
 export const listPins = createServerFn({ method: "GET" }).handler(async () => {
   const s = await db();
+  // Rows left mid-process (e.g. the tab was closed) become retryable after 10 minutes.
+  await s.from("pins").update({ status: "failed", error: "Interrupted — retry this row" })
+    .in("status", ["generating", "sending"]).lt("updated_at", new Date(Date.now() - 10 * 60_000).toISOString());
   const { data, error } = await s.from("pins").select("*").order("position").limit(1000);
   if (error) throw new Error(error.message);
   return data;
