@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       app_settings: {
         Row: {
+          ai_prompts_enabled: boolean
           append_hashtags: boolean
           buffer_api_key: string | null
           channel_id: string | null
@@ -23,10 +24,13 @@ export type Database = {
           id: number
           image_format: string
           image_model: string
+          image_style: string
           organization_id: string | null
+          text_model: string
           updated_at: string
         }
         Insert: {
+          ai_prompts_enabled?: boolean
           append_hashtags?: boolean
           buffer_api_key?: string | null
           channel_id?: string | null
@@ -34,10 +38,13 @@ export type Database = {
           id?: number
           image_format?: string
           image_model?: string
+          image_style?: string
           organization_id?: string | null
+          text_model?: string
           updated_at?: string
         }
         Update: {
+          ai_prompts_enabled?: boolean
           append_hashtags?: boolean
           buffer_api_key?: string | null
           channel_id?: string | null
@@ -45,7 +52,9 @@ export type Database = {
           id?: number
           image_format?: string
           image_model?: string
+          image_style?: string
           organization_id?: string | null
+          text_model?: string
           updated_at?: string
         }
         Relationships: []

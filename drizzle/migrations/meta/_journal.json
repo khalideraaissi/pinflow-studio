@@ -15,6 +15,13 @@
       "when": 1794481041710,
       "tag": "0001_pins_updated_at",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794481985917,
+      "tag": "0002_ai_prompt_settings",
+      "breakpoints": true
     }
   ]
 }
