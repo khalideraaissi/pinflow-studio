@@ -7,6 +7,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { bufferOverview, saveSettings } from "@/lib/pins.functions";
@@ -40,6 +41,7 @@ function Section({ title, children, hint }: { title: string; hint?: string; chil
 type SettingsPatch = {
   buffer_api_key?: string; organization_id?: string | null; channel_id?: string | null; default_board_id?: string | null;
   image_model?: string; image_format?: "png" | "jpeg"; append_hashtags?: boolean;
+  ai_prompts_enabled?: boolean; text_model?: string; image_style?: string;
 };
 
 function SettingsPage() {
@@ -49,6 +51,7 @@ function SettingsPage() {
   const overview = useServerFn(bufferOverview);
   const [key, setKey] = useState("");
   const [busy, setBusy] = useState(false);
+  const [style, setStyle] = useState(s.image_style);
 
   const buffer = useQuery({
     queryKey: ["buffer", s.organization_id, s.channel_id, s.has_key],
@@ -138,6 +141,28 @@ function SettingsPage() {
               </Select>
             </div>
           </div>
+        </Section>
+
+        <Section title="AI writing" hint="When a row has no image prompt, AI writes one from the title and description. Your titles and descriptions are never changed.">
+          <label className="flex items-center justify-between gap-4 text-sm">
+            <span>Write missing image prompts with AI</span>
+            <Switch checked={s.ai_prompts_enabled} onCheckedChange={(v) => update({ ai_prompts_enabled: v }, v ? "AI writing on" : "AI writing off")} />
+          </label>
+          <div className="space-y-2">
+            <Label>Writing model</Label>
+            <Select value={s.text_model} disabled={!s.ai_prompts_enabled} onValueChange={(v) => update({ text_model: v }, "Model saved")}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="openai/gpt-6-astra">GPT-6 Astra (best quality)</SelectItem>
+                <SelectItem value="openai/gpt-5-mini">GPT-5 Mini (faster)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </Section>
+
+        <Section title="Image style template" hint="Added to every image prompt so all pins share one look. Leave empty to skip.">
+          <Textarea rows={3} value={style} onChange={(e) => setStyle(e.target.value)} placeholder="e.g. Soft natural light, warm earthy tones, minimalist, editorial photography" />
+          <Button disabled={busy || style === s.image_style} onClick={() => update({ image_style: style }, "Style saved")}>Save style</Button>
         </Section>
 
         <Section title="Image & pin options">

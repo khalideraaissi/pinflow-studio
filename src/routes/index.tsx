@@ -210,7 +210,7 @@ function Dashboard() {
         {/* Actions + progress */}
         <section className="space-y-4 rounded-xl border bg-card p-5">
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" disabled={busy || !pins.length} onClick={() => process(order(pins.filter((p) => !p.image_url && p.status !== "added" && p.image_prompt.trim())), "generate")}><ImagePlus />Generate All Images</Button>
+            <Button variant="outline" disabled={busy || !pins.length} onClick={() => process(order(pins.filter((p) => !p.image_url && p.status !== "added" && (p.image_prompt.trim() || settings.ai_prompts_enabled))), "generate")}><ImagePlus />Generate All Images</Button>
             <Button variant="outline" disabled={!pins.length} onClick={() => setPreview(true)}><Eye />Preview Pins</Button>
             <Button disabled={busy || !selected.size} onClick={() => process(sendable(selectedPins), "send")}><Send />Send Selected ({selected.size})</Button>
             <Button disabled={busy || !pins.length} onClick={() => process(sendable(pins), "send")}><Send />Send All to Buffer</Button>
