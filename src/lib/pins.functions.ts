@@ -32,6 +32,9 @@ export const saveSettings = createServerFn({ method: "POST" })
       image_model: z.string().max(100).optional(),
       image_format: z.enum(["png", "jpeg"]).optional(),
       append_hashtags: z.boolean().optional(),
+      ai_prompts_enabled: z.boolean().optional(),
+      text_model: z.string().max(100).optional(),
+      image_style: z.string().max(2000).optional(),
     }).parse(d),
   )
   .handler(async ({ data }) => {
@@ -123,10 +126,17 @@ async function makeImage(id: string) {
   const st = await settings();
   const { data: pin, error } = await s.from("pins").select("*").eq("id", id).single();
   if (error || !pin) throw new Error("Row not found");
-  if (!pin.image_prompt.trim()) throw new Error("image_prompt is empty");
-  const { createPinImage } = await import("./images.server");
+  const { createPinImage, writeImagePrompt } = await import("./images.server");
+  let prompt = pin.image_prompt.trim();
+  if (!prompt) {
+    if (!st.ai_prompts_enabled) throw new Error("image_prompt is empty");
+    if (!pin.title.trim() && !pin.description.trim()) throw new Error("Need a title or description to write an image prompt");
+    prompt = await writeImagePrompt(pin.title, pin.description, st.text_model);
+    await s.from("pins").update({ image_prompt: prompt }).eq("id", id);
+  }
+  if (st.image_style.trim()) prompt = `${prompt}\nStyle: ${st.image_style.trim()}`;
   const fmt = st.image_format === "jpeg" ? "jpeg" : "png";
-  const bytes = await createPinImage(pin.image_prompt, st.image_model, fmt);
+  const bytes = await createPinImage(prompt, st.image_model, fmt);
   const path = `${id}/${Date.now()}.${fmt === "jpeg" ? "jpg" : "png"}`;
   const up = await s.storage.from("pin-images").upload(path, bytes, { contentType: `image/${fmt}`, upsert: true });
   if (up.error) throw new Error(`Upload failed: ${up.error.message}`);

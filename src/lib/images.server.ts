@@ -21,3 +21,25 @@ export async function createPinImage(prompt: string, model: string, format: "png
     throw e;
   }
 }
+
+export const TEXT_MODELS = ["openai/gpt-6-astra", "openai/gpt-5.4-mini"] as const;
+
+// Writes an image prompt from the pin's title/description. Never changes the pin text itself.
+export async function writeImagePrompt(title: string, description: string, model: string) {
+  const { generateResponse } = await import("@lovable.dev/ai-gateway");
+  const input = `Write one vivid image-generation prompt (max 80 words) for a vertical Pinterest pin photo. No text in the image. Return only the prompt.\nTitle: ${title}\nDescription: ${description}`;
+  try {
+    const res = model === "openai/gpt-5.4-mini"
+      ? await generateResponse({ model: "openai/gpt-5.4-mini", input })
+      : await generateResponse({ model: "openai/gpt-6-astra", input });
+    let text = "";
+    for (const item of res.output ?? []) {
+      if (item.type === "message") for (const c of item.content) if (c.type === "output_text") text += c.text;
+    }
+    if (!text.trim()) throw new Error("The writing model returned no prompt");
+    return text.trim();
+  } catch (e) {
+    if (e instanceof GatewayError) throw new Error(`Prompt writing failed (${e.code}): ${e.message}`);
+    throw e;
+  }
+}

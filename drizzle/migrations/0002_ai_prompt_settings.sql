@@ -1,0 +1,1 @@
+ALTER TABLE public.app_settings ADD COLUMN IF NOT EXISTS ai_prompts_enabled boolean NOT NULL DEFAULT false, ADD COLUMN IF NOT EXISTS text_model text NOT NULL DEFAULT 'openai/gpt-6-astra', ADD COLUMN IF NOT EXISTS image_style text NOT NULL DEFAULT '';
