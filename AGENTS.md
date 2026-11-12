@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- All database and storage access goes through server functions in `src/lib/pins.functions.ts` using the admin client; tables have RLS with no public policies, so API keys (Buffer key in `app_settings`) never reach the browser.
+- Rows are processed one server call per row from the dashboard loop, with an atomic status claim in the database to prevent duplicate Buffer submissions; this avoids Worker request timeouts on big sheets.
+- Buffer posts always use `mode: addToQueue` with `schedulingType: automatic` — never publish immediately.
