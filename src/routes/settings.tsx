@@ -37,6 +37,11 @@ function Section({ title, children, hint }: { title: string; hint?: string; chil
   );
 }
 
+type SettingsPatch = {
+  buffer_api_key?: string; organization_id?: string | null; channel_id?: string | null; default_board_id?: string | null;
+  image_model?: string; image_format?: "png" | "jpeg"; append_hashtags?: boolean;
+};
+
 function SettingsPage() {
   const qc = useQueryClient();
   const { data: s } = useSuspenseQuery(settingsQuery);
@@ -52,7 +57,7 @@ function SettingsPage() {
     staleTime: 60_000,
   });
 
-  async function update(patch: Parameters<typeof save>[0]["data"], msg?: string) {
+  async function update(patch: SettingsPatch, msg?: string) {
     setBusy(true);
     try {
       await save({ data: patch });
@@ -93,21 +98,21 @@ function SettingsPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label>Organization</Label>
-                <Select value={b.organizationId ?? undefined} onValueChange={(v) => update({ organization_id: v, channel_id: null, default_board_id: null })}>
+                <Select value={b.organizationId ?? ""} onValueChange={(v) => update({ organization_id: v, channel_id: null, default_board_id: null })}>
                   <SelectTrigger><SelectValue placeholder="Choose" /></SelectTrigger>
                   <SelectContent>{b.organizations.map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Pinterest channel</Label>
-                <Select value={s.channel_id ?? undefined} onValueChange={(v) => update({ organization_id: b.organizationId, channel_id: v, default_board_id: null }, "Channel saved")}>
+                <Select value={s.channel_id ?? ""} onValueChange={(v) => update({ organization_id: b.organizationId, channel_id: v, default_board_id: null }, "Channel saved")}>
                   <SelectTrigger><SelectValue placeholder={b.channels.length ? "Choose" : "No Pinterest channels"} /></SelectTrigger>
                   <SelectContent>{b.channels.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Default board</Label>
-                <Select value={s.default_board_id ?? undefined} disabled={!s.channel_id} onValueChange={(v) => update({ default_board_id: v }, "Board saved")}>
+                <Select value={s.default_board_id ?? ""} disabled={!s.channel_id} onValueChange={(v) => update({ default_board_id: v }, "Board saved")}>
                   <SelectTrigger><SelectValue placeholder="Choose" /></SelectTrigger>
                   <SelectContent>{b.boards.map((x) => <SelectItem key={x.serviceId} value={x.serviceId}>{x.name}</SelectItem>)}</SelectContent>
                 </Select>

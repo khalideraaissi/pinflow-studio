@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  bufferOverview, deletePins, generatePinImage, importPins, saveSettings, sendPinToBuffer, setBoardForPins, updatePin,
+  bufferOverview, deletePins, listPins, generatePinImage, importPins, saveSettings, sendPinToBuffer, setBoardForPins, updatePin,
 } from "@/lib/pins.functions";
 import { pinsQuery, settingsQuery } from "@/lib/queries";
 import { REQUIRED_COLUMNS, STATUS_LABEL, buildPinDescription, validateRow } from "@/lib/pin-text";
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-type Pin = Awaited<ReturnType<typeof pinsQuery.queryFn>>[number];
+type Pin = Awaited<ReturnType<typeof listPins>>[number];
 type Row = { title: string; description: string; tags: string; image_prompt: string; article_url: string };
 
 const STATUS_STYLE: Record<string, string> = {
@@ -51,7 +51,8 @@ const STATUS_STYLE: Record<string, string> = {
 
 async function parseFile(file: File): Promise<{ rows: Row[]; missing: string[] }> {
   const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
-  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const sheet = wb.Sheets[wb.SheetNames[0] ?? ""];
+  if (!sheet) return { rows: [], missing: [...REQUIRED_COLUMNS] };
   const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "", raw: false });
   const norm = (k: string) => k.trim().toLowerCase().replace(/[\s-]+/g, "_");
   const headers = new Set(Object.keys(raw[0] ?? {}).map(norm));
@@ -60,7 +61,7 @@ async function parseFile(file: File): Promise<{ rows: Row[]; missing: string[] }
     .map((r) => {
       const o: Record<string, string> = {};
       for (const [k, v] of Object.entries(r)) o[norm(k)] = String(v ?? "").trim();
-      return { title: o.title ?? "", description: o.description ?? "", tags: o.tags ?? "", image_prompt: o.image_prompt ?? "", article_url: o.article_url ?? "" };
+      return { title: o["title"] ?? "", description: o["description"] ?? "", tags: o["tags"] ?? "", image_prompt: o["image_prompt"] ?? "", article_url: o["article_url"] ?? "" };
     })
     .filter((r) => Object.values(r).some(Boolean));
   return { rows, missing };
@@ -99,13 +100,13 @@ function Dashboard() {
   }, [pins]);
   const invalidCount = pins.filter((p) => validateRow(p).length).length;
 
-  async function onFile(file?: File) {
+  async function onFile(file?: File): Promise<void> {
     if (!file) return;
-    if (!/\.(csv|xlsx|xls)$/i.test(file.name)) return toast.error("Please upload a .csv or .xlsx file");
+    if (!/\.(csv|xlsx|xls)$/i.test(file.name)) return void toast.error("Please upload a .csv or .xlsx file");
     try {
       const { rows, missing } = await parseFile(file);
-      if (missing.length) return toast.error(`Missing columns: ${missing.join(", ")}`);
-      if (!rows.length) return toast.error("No rows found in the file");
+      if (missing.length) return void toast.error(`Missing columns: ${missing.join(", ")}`);
+      if (!rows.length) return void toast.error("No rows found in the file");
       for (let i = 0; i < rows.length; i += 200) await doImport({ data: { batchName: file.name, rows: rows.slice(i, i + 200) } });
       toast.success(`Imported ${rows.length} rows from ${file.name}`);
       refresh();
@@ -114,20 +115,21 @@ function Dashboard() {
     }
   }
 
-  async function process(ids: string[], kind: "generate" | "send") {
-    if (running.current) return toast.info("Already processing — please wait");
-    if (!ids.length) return toast.info("No rows to process");
-    if (kind === "send" && (!settings.channel_id)) return toast.error("Choose a Pinterest channel in Settings first");
+  async function process(ids: string[], kind: "generate" | "send"): Promise<void> {
+    if (running.current) return void toast.info("Already processing — please wait");
+    if (!ids.length) return void toast.info("No rows to process");
+    if (kind === "send" && (!settings.channel_id)) return void toast.error("Choose a Pinterest channel in Settings first");
     if (kind === "send") {
       const noBoard = pins.filter((p) => ids.includes(p.id) && !p.board_id && !settings.default_board_id).length;
-      if (noBoard) return toast.error("Pick a board (default or per row) before sending");
+      if (noBoard) return void toast.error("Pick a board (default or per row) before sending");
     }
     running.current = true;
     setRun({ label: kind === "generate" ? "Generating images" : "Sending to Buffer", done: 0, total: ids.length });
     let failed = 0;
     for (let i = 0; i < ids.length; i++) {
       try {
-        const r = kind === "generate" ? await doGen({ data: { id: ids[i] } }) : await doSend({ data: { id: ids[i] } });
+        const id = ids[i]!;
+        const r = kind === "generate" ? await doGen({ data: { id } }) : await doSend({ data: { id } });
         if ("error" in r && r.error) failed++;
         if ("error" in r && r.error && kind === "send" && !("skipped" in r)) { toast.error(r.error); break; }
       } catch { failed++; }
@@ -168,7 +170,7 @@ function Dashboard() {
     a.click();
   }
 
-  const doneCount = counts.added ?? 0;
+  const doneCount = counts["added"] ?? 0;
   const pct = run ? (run.done / run.total) * 100 : pins.length ? (doneCount / pins.length) * 100 : 0;
 
   return (
@@ -182,7 +184,7 @@ function Dashboard() {
           {buffer.data?.connected && settings.channel_id && (
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">Default board</span>
-              <Select value={settings.default_board_id ?? undefined} onValueChange={async (v) => { await doSave({ data: { default_board_id: v } }); qc.invalidateQueries({ queryKey: ["settings"] }); }}>
+              <Select value={settings.default_board_id ?? ""} onValueChange={async (v) => { await doSave({ data: { default_board_id: v } }); qc.invalidateQueries({ queryKey: ["settings"] }); }}>
                 <SelectTrigger className="h-8 w-56"><SelectValue placeholder="Choose a board" /></SelectTrigger>
                 <SelectContent>{boards.map((b) => <SelectItem key={b.serviceId} value={b.serviceId}>{b.name}</SelectItem>)}</SelectContent>
               </Select>
@@ -212,7 +214,7 @@ function Dashboard() {
             <Button variant="outline" disabled={!pins.length} onClick={() => setPreview(true)}><Eye />Preview Pins</Button>
             <Button disabled={busy || !selected.size} onClick={() => process(sendable(selectedPins), "send")}><Send />Send Selected ({selected.size})</Button>
             <Button disabled={busy || !pins.length} onClick={() => process(sendable(pins), "send")}><Send />Send All to Buffer</Button>
-            <Button variant="outline" disabled={busy || !counts.failed} onClick={() => process(order(pins.filter((p) => p.status === "failed")), settings.channel_id ? "send" : "generate")}><RotateCcw />Retry Failed ({counts.failed ?? 0})</Button>
+            <Button variant="outline" disabled={busy || !counts["failed"]} onClick={() => process(order(pins.filter((p) => p.status === "failed")), settings.channel_id ? "send" : "generate")}><RotateCcw />Retry Failed ({counts["failed"] ?? 0})</Button>
             <Button variant="ghost" disabled={!pins.length} onClick={downloadResults}><Download />Results CSV</Button>
             {selected.size > 0 && (
               <div className="ml-auto flex items-center gap-2">

@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { buildPinDescription } from "./pin-text";
+import type { TablesUpdate } from "@/integrations/supabase/types";
+
+const clean = <T extends object>(o: T) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));
 
 async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -33,8 +36,8 @@ export const saveSettings = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const s = await db();
-    const patch: Record<string, unknown> = { ...data, updated_at: new Date().toISOString() };
-    if (!data.buffer_api_key) delete patch.buffer_api_key;
+    const { buffer_api_key, ...rest } = data;
+    const patch = clean({ ...rest, ...(buffer_api_key ? { buffer_api_key } : {}), updated_at: new Date().toISOString() }) as TablesUpdate<"app_settings">;
     const { error } = await s.from("app_settings").update(patch).eq("id", 1);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -89,7 +92,7 @@ export const updatePin = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { id, ...patch } = data;
     const s = await db();
-    const { error } = await s.from("pins").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await s.from("pins").update(clean(patch) as TablesUpdate<"pins">).eq("id", id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
