@@ -14,7 +14,102 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_settings: {
+        Row: {
+          append_hashtags: boolean
+          buffer_api_key: string | null
+          channel_id: string | null
+          default_board_id: string | null
+          id: number
+          image_format: string
+          image_model: string
+          organization_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          append_hashtags?: boolean
+          buffer_api_key?: string | null
+          channel_id?: string | null
+          default_board_id?: string | null
+          id?: number
+          image_format?: string
+          image_model?: string
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          append_hashtags?: boolean
+          buffer_api_key?: string | null
+          channel_id?: string | null
+          default_board_id?: string | null
+          id?: number
+          image_format?: string
+          image_model?: string
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pins: {
+        Row: {
+          article_url: string
+          batch_name: string | null
+          board_id: string | null
+          buffer_post_id: string | null
+          buffer_status: string | null
+          created_at: string
+          description: string
+          error: string | null
+          id: string
+          image_path: string | null
+          image_prompt: string
+          image_url: string | null
+          position: number
+          status: string
+          tags: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          article_url?: string
+          batch_name?: string | null
+          board_id?: string | null
+          buffer_post_id?: string | null
+          buffer_status?: string | null
+          created_at?: string
+          description?: string
+          error?: string | null
+          id?: string
+          image_path?: string | null
+          image_prompt?: string
+          image_url?: string | null
+          position?: number
+          status?: string
+          tags?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          article_url?: string
+          batch_name?: string | null
+          board_id?: string | null
+          buffer_post_id?: string | null
+          buffer_status?: string | null
+          created_at?: string
+          description?: string
+          error?: string | null
+          id?: string
+          image_path?: string | null
+          image_prompt?: string
+          image_url?: string | null
+          position?: number
+          status?: string
+          tags?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
