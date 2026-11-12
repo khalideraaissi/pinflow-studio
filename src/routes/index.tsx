@@ -212,10 +212,7 @@ function Dashboard() {
             <Button variant="outline" disabled={!pins.length} onClick={() => setPreview(true)}><Eye />Preview Pins</Button>
             <Button disabled={busy || !selected.size} onClick={() => process(sendable(selectedPins), "send")}><Send />Send Selected ({selected.size})</Button>
             <Button disabled={busy || !pins.length} onClick={() => process(sendable(pins), "send")}><Send />Send All to Buffer</Button>
-            <Button variant="outline" disabled={busy || !counts.failed} onClick={() => {
-              const failed = pins.filter((p) => p.status === "failed");
-              process(order(failed.filter((p) => p.image_url || p.buffer_post_id === null)), failed.some((p) => p.image_url) || settings.channel_id ? "send" : "generate");
-            }}><RotateCcw />Retry Failed ({counts.failed ?? 0})</Button>
+            <Button variant="outline" disabled={busy || !counts.failed} onClick={() => process(order(pins.filter((p) => p.status === "failed")), settings.channel_id ? "send" : "generate")}><RotateCcw />Retry Failed ({counts.failed ?? 0})</Button>
             <Button variant="ghost" disabled={!pins.length} onClick={downloadResults}><Download />Results CSV</Button>
             {selected.size > 0 && (
               <div className="ml-auto flex items-center gap-2">
