@@ -154,7 +154,7 @@ function SettingsPage() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="openai/gpt-6-astra">GPT-6 Astra (best quality)</SelectItem>
-                <SelectItem value="openai/gpt-5-mini">GPT-5 Mini (faster)</SelectItem>
+                <SelectItem value="openai/gpt-5.4-mini">GPT-5.4 Mini (faster)</SelectItem>
               </SelectContent>
             </Select>
           </div>
