@@ -2,7 +2,7 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/udc_google_ai_studio"
 
 export const GOOGLE_IMAGE_MODELS = ["google/gemini-nano-banana-2.1", "google/gemini-3-pro-image"] as const;
 
-export async function createGooglePinImage(prompt: string, model: string, format: "png" | "jpeg", credentials: { gatewayKey?: string; connectionKey?: string }) {
+export async function createGooglePinImage(prompt: string, model: string, format: "png" | "jpeg", credentials: { gatewayKey?: string | undefined; connectionKey?: string | undefined }) {
   if (!(GOOGLE_IMAGE_MODELS as readonly string[]).includes(model)) throw new Error("Unsupported Google image model");
   if (!credentials.gatewayKey || !credentials.connectionKey) throw new Error("Connect Google AI Studio in Lovable's Connectors first.");
   const response = await fetch(`${GATEWAY_URL}/v1beta/interactions`, {
