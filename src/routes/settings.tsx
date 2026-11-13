@@ -184,7 +184,7 @@ function SettingsPage() {
             </div>
             <div className="space-y-2">
               <Label>Format</Label>
-              <Select value={s.image_format} onValueChange={(v) => update({ image_format: v as "png" | "jpeg" }, "Format saved")}>
+              <Select value={s.image_model.startsWith("google/") ? "jpeg" : s.image_format} disabled={s.image_model.startsWith("google/")} onValueChange={(v) => update({ image_format: v as "png" | "jpeg" }, "Format saved")}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent><SelectItem value="png">PNG</SelectItem><SelectItem value="jpeg">JPEG</SelectItem></SelectContent>
               </Select>

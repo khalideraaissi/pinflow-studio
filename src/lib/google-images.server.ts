@@ -16,7 +16,7 @@ export async function createGooglePinImage(prompt: string, model: string, format
     body: JSON.stringify({
       model: model.slice("google/".length),
       input: `Vertical Pinterest pin image, 2:3 portrait composition, no text overlays unless requested. ${prompt}`,
-      response_format: { type: "image", mime_type: `image/${format}`, aspect_ratio: "2:3", image_size: "1K" },
+      response_format: { type: "image", mime_type: "image/jpeg", aspect_ratio: "2:3", image_size: "1K" },
     }),
     signal: AbortSignal.timeout(180_000),
   });
@@ -27,7 +27,7 @@ export async function createGooglePinImage(prompt: string, model: string, format
   const result = await response.json() as { outputs?: { type: string; data?: string; mime_type?: string }[]; output_image?: { data?: string; mime_type?: string }; status?: string };
   const image = result.output_image ?? result.outputs?.find((output) => output.type === "image" && output.data);
   if (!image?.data) throw new Error("Google returned no image. Try a different prompt or check your Google AI account limits.");
-  const mimeType = image.mime_type ?? `image/${format}`;
+  const mimeType = image.mime_type ?? "image/jpeg";
   if (mimeType !== "image/png" && mimeType !== "image/jpeg") throw new Error(`Google returned an unsupported image format: ${mimeType}`);
   return { bytes: Uint8Array.from(atob(image.data), (c) => c.charCodeAt(0)), format: mimeType === "image/jpeg" ? "jpeg" as const : "png" as const };
 }

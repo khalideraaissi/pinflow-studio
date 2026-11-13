@@ -11,7 +11,7 @@ describe("Google image generation", () => {
     const call = fetchMock.mock.calls[0];
     if (!call) throw new Error("Google was not called");
     expect(call[0]).toBe("https://connector-gateway.lovable.dev/udc_google_ai_studio/v1beta/interactions");
-    expect(JSON.parse(call[1].body)).toMatchObject({ model: "gemini-nano-banana-2.1", response_format: { aspect_ratio: "2:3", mime_type: "image/png" } });
+    expect(JSON.parse(call[1].body)).toMatchObject({ model: "gemini-nano-banana-2.1", response_format: { aspect_ratio: "2:3", mime_type: "image/jpeg" } });
     expect([...result.bytes]).toEqual([1, 2, 3]);
   });
   it("does not fall back to another account when Google rejects the request", async () => {
