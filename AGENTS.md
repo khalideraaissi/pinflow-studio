@@ -33,3 +33,4 @@ use the editor.
 - All database and storage access goes through server functions in `src/lib/pins.functions.ts` using the admin client; tables have RLS with no public policies, so API keys (Buffer key in `app_settings`) never reach the browser.
 - Rows are processed one server call per row from the dashboard loop, with an atomic status claim in the database to prevent duplicate Buffer submissions; this avoids Worker request timeouts on big sheets.
 - Buffer posts always use `mode: addToQueue` with `schedulingType: automatic` — never publish immediately.
+- Google-owned image generation uses the linked Google AI Studio connector server-side, while built-in models retain the AI gateway; provider credentials must never reach the browser.

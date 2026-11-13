@@ -124,19 +124,30 @@ function SettingsPage() {
           )}
         </Section>
 
-        <Section title="AI images" hint="Images are made with Lovable AI — no extra key or account needed.">
+        <Section title="AI images">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Provider</Label>
-              <Input value="Lovable AI" disabled />
+              <Select value={s.image_model.startsWith("google/") ? "google" : "lovable"} onValueChange={(v) => update({ image_model: v === "google" ? "google/gemini-nano-banana-2.1" : "openai/gpt-image-2.5-sunburst" }, "Image provider saved")}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="google">Google AI Studio · your account</SelectItem>
+                  <SelectItem value="lovable">Lovable AI</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Model</Label>
               <Select value={s.image_model} onValueChange={(v) => update({ image_model: v }, "Model saved")}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="openai/gpt-image-2.5-sunburst">GPT Image 2.5 (best quality)</SelectItem>
-                  <SelectItem value="openai/gpt-image-2">GPT Image 2</SelectItem>
+                  {s.image_model.startsWith("google/") ? <>
+                    <SelectItem value="google/gemini-nano-banana-2.1">Nano Banana 2.1</SelectItem>
+                    <SelectItem value="google/gemini-3-pro-image">Nano Banana Pro</SelectItem>
+                  </> : <>
+                    <SelectItem value="openai/gpt-image-2.5-sunburst">GPT Image 2.5 (best quality)</SelectItem>
+                    <SelectItem value="openai/gpt-image-2">GPT Image 2</SelectItem>
+                  </>}
                 </SelectContent>
               </Select>
             </div>
@@ -169,7 +180,7 @@ function SettingsPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Dimensions</Label>
-              <Input value="1000 × 1500 (2:3 vertical)" disabled />
+              <Input value={s.image_model.startsWith("google/") ? "2:3 vertical · 1K" : "1000 × 1500 (2:3 vertical)"} disabled />
             </div>
             <div className="space-y-2">
               <Label>Format</Label>
