@@ -135,8 +135,18 @@ async function makeImage(id: string) {
     await s.from("pins").update({ image_prompt: prompt }).eq("id", id);
   }
   if (st.image_style.trim()) prompt = `${prompt}\nStyle: ${st.image_style.trim()}`;
-  const fmt = st.image_format === "jpeg" ? "jpeg" : "png";
-  const bytes = await createPinImage(prompt, st.image_model, fmt);
+  let fmt: "jpeg" | "png" = st.image_format === "jpeg" ? "jpeg" : "png";
+  let bytes: Uint8Array;
+  if (st.image_model.startsWith("google/")) {
+    const { createGooglePinImage } = await import("./google-images.server");
+    const image = await createGooglePinImage(prompt, st.image_model, fmt, {
+      gatewayKey: process.env["LOVABLE_API_KEY"], connectionKey: process.env["UDC_GOOGLE_AI_STUDIO_API_KEY"],
+    });
+    bytes = image.bytes;
+    fmt = image.format;
+  } else {
+    bytes = await createPinImage(prompt, st.image_model, fmt);
+  }
   const path = `${id}/${Date.now()}.${fmt === "jpeg" ? "jpg" : "png"}`;
   const up = await s.storage.from("pin-images").upload(path, bytes, { contentType: `image/${fmt}`, upsert: true });
   if (up.error) throw new Error(`Upload failed: ${up.error.message}`);
